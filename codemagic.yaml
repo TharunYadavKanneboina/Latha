@@ -15,10 +15,10 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Use the Node.js version required for your Expo project
+          node-version: '16'
 
-      # Step 3: Install Expo CLI
-      - name: Install Expo CLI
+      # Step 3: Install Expo CLI and EAS CLI
+      - name: Install Expo CLI and EAS CLI
         run: npm install -g expo-cli eas-cli
 
       # Step 4: Authenticate with Expo
@@ -28,15 +28,19 @@ jobs:
       # Step 5: Run EAS Build for iOS
       - name: Build iOS App
         run: eas build --platform ios --non-interactive
-        env:
-          EXPO_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} # Add if required for iOS builds
 
-      # Step 6: Upload .ipa to GitHub Releases
+      # Step 6: Fetch the Build Artifact
+      - name: Download Build Artifact
+        run: |
+          mkdir -p build-output
+          eas build:fetch --platform ios --non-interactive --output ./build-output/app.ipa
+
+      # Step 7: Upload .ipa to GitHub Releases
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./builds/**/*.ipa # Adjust the path if necessary
+          file: build-output/app.ipa
           tag: v1.0
           overwrite: true
           body: "This is the first release"
