@@ -5,38 +5,38 @@ on:
 
 jobs:
   build-ios:
-    name: 🎉 iOS Build
-    runs-on: macos-latest
+    name: 🎉 Expo EAS iOS Build
+    runs-on: ubuntu-latest
     steps:
+      # Step 1: Checkout the repository
       - uses: actions/checkout@v3
 
-      - uses: subosito/flutter-action@v2
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          channel: 'stable'
-          architecture: x64
-      - run: flutter pub get
-      
+          node-version: '16' # Use the Node.js version required for your Expo project
 
-      - run: pod repo update
-        working-directory: ios
+      # Step 3: Install Expo CLI
+      - name: Install Expo CLI
+        run: npm install -g expo-cli eas-cli
 
-      - run: flutter build ios --release --no-codesign
+      # Step 4: Authenticate with Expo
+      - name: Authenticate with Expo
+        run: eas login --token ${{ secrets.EXPO_TOKEN }}
 
-      - run: mkdir Payload
-        working-directory: build/ios/iphoneos
+      # Step 5: Run EAS Build for iOS
+      - name: Build iOS App
+        run: eas build --platform ios --non-interactive
+        env:
+          EXPO_APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }} # Add if required for iOS builds
 
-      - run: mv Runner.app/ Payload
-        working-directory: build/ios/iphoneos
-
-      - name: Zip output
-        run: zip -qq -r -9 FlutterIpaExport.ipa Payload
-        working-directory: build/ios/iphoneos
-
+      # Step 6: Upload .ipa to GitHub Releases
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/ios/iphoneos/FlutterIpaExport.ipa
+          file: ./builds/**/*.ipa # Adjust the path if necessary
           tag: v1.0
           overwrite: true
-          body: "This is first release"
+          body: "This is the first release"
