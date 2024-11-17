@@ -1,0 +1,4 @@
+workflows:
+  test_workflow:
+    scripts:
+      - echo "Codemagic is working!"
